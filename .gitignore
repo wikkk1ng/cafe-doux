@@ -1,0 +1,16 @@
+# чистовая сборка — её делает GitHub Actions (build/release.mjs), в репозиторий не кладём
+dist/
+
+# инструменты сборки
+node_modules/
+build/package-lock.json
+__pycache__/
+
+# отчёты Lighthouse и временные файлы
+build/lh-*.json
+*.log
+.DS_Store
+Thumbs.db
+
+# настройки локального превью
+.claude/

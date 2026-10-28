@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Café Doux — кофейня и пекарня</title>
+  <meta name="description" content="Café Doux — независимая кофейня-пекарня. Макаронс, круассаны, хлеб на закваске и кофе. Выпекаем каждое утро.">
+  <meta name="theme-color" content="#EFE3CF">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='22' rx='26' ry='12' fill='%23E99AA8'/%3E%3Crect x='8' y='26' width='48' height='9' rx='4' fill='%23F4E2D0'/%3E%3Cellipse cx='32' cy='41' rx='26' ry='12' fill='%23E99AA8'/%3E%3C/svg%3E">
+  <!-- шрифты первого экрана — заранее; остальные подтянутся по мере надобности -->
+  <link rel="preload" href="assets/fonts/yeseva-one.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/literata.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- Тема выбирается до первой отрисовки, чтобы не мелькала светлая версия.
+       Вечер — с 19:00 до 6:00 по часам посетителя; ручной выбор помнится 12 часов.
+       Здесь же заранее грузим картинку-заглушку макарона нужной темы и размера. -->
+  <script>
+    (function () {
+      var d = document.documentElement, theme = null;
+      var forced = /[?&]theme=(day|evening)/.exec(location.search);
+      if (forced) theme = forced[1];
+      if (!theme) {
+        try {
+          var saved = JSON.parse(localStorage.getItem('cafedoux-theme') || 'null');
+          if (saved && Date.now() - saved.at < 12 * 3600e3) theme = saved.theme;
+        } catch (e) {}
+      }
+      if (!theme) { var h = new Date().getHours(); theme = h >= 19 || h < 6 ? 'evening' : 'day'; }
+      d.dataset.theme = theme;
+      d.classList.add('js');
+      if (theme === 'evening') document.querySelector('meta[name="theme-color"]').content = '#1D1510';
+      var poster = document.createElement('link');
+      poster.rel = 'preload'; poster.as = 'image'; poster.fetchPriority = 'high';
+      poster.href = 'assets/img/macaron-poster' + (theme === 'evening' ? '-evening' : '') +
+        (matchMedia('(max-width: 860px)').matches ? '-560' : '') + '.webp';
+      document.head.appendChild(poster);
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 1. Хедер -->
+  <header class="header" id="header">
+    <div class="header__inner">
+      <a href="#top" class="logo" aria-label="Café Doux — на главную">
+        Café <span class="logo__hand">doux</span>
+      </a>
+      <p class="header__note">Покровка и&nbsp;Никитская · сегодня с&nbsp;7:30</p>
+      <nav class="nav" id="nav" aria-label="Основная навигация">
+        <a href="#menu">Меню</a>
+        <a href="#box">Коробка</a>
+        <a href="#about">О нас</a>
+        <a href="#places">Адреса</a>
+      </nav>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false" aria-label="Включить вечерний режим">
+        <svg class="theme-toggle__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <svg class="theme-toggle__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <button class="burger" id="burger" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- рельса: пока она прокручивается, макарон закреплён на экране -->
+    <div class="scene-rail">
+
+      <!-- закреплённый слой с 3D-макароном -->
+      <div class="scene" aria-hidden="true">
+        <div class="scene__slot" id="sceneSlot">
+          <span class="scene__blob" id="sceneBlob"></span>
+          <div class="scene__poster" id="scenePoster"></div>
+        </div>
+        <canvas id="macaron"></canvas>
+      </div>
+
+    <!-- 2. Hero -->
+    <section class="hero">
+      <div class="hero__text">
+        <p class="kicker hero__kicker">Кофейня и&nbsp;пекарня в&nbsp;старом доме на&nbsp;Покровке</p>
+        <h1 class="hero__title">
+          <span class="line"><span>Тёплое утро</span></span>
+          <span class="line line--soft"><span>начинается</span></span>
+          <span class="line"><span>здесь</span></span>
+        </h1>
+        <p class="hero__lead">
+          В&nbsp;пять утра мы&nbsp;зажигаем печи. К&nbsp;открытию на&nbsp;витрине хрустящие круассаны,
+          хлеб на&nbsp;живой закваске и&nbsp;макаронс, которые ещё помнят тепло рук.
+        </p>
+        <div class="hero__actions">
+          <a href="#menu" class="btn btn--primary">Выбрать выпечку <i class="arrow">→</i></a>
+          <a href="#places" class="link-underline">Открыто с&nbsp;7:30</a>
+        </div>
+      </div>
+
+      <!-- место под 3D-макарон: сам объект рисуется в закреплённом слое .scene -->
+      <div class="hero__stage">
+        <p class="hand hero__note">
+          Framboise — малина<br>и&nbsp;белый шоколад
+          <svg class="hero__arrow" viewBox="0 0 90 60" aria-hidden="true"><path d="M4 50 C 22 54, 52 48, 70 20 M58 22 L71 18 L73 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </p>
+      </div>
+    </section>
+
+
+    <!-- 3. Разбор макарона на слои -->
+    <section class="recipe" id="recipe">
+      <div class="recipe__sticky">
+        <div class="recipe__text">
+          <p class="kicker reveal">Как он устроен</p>
+          <h2 class="title reveal">Три слоя <span class="soft">и ни одного лишнего</span></h2>
+
+          <ul class="recipe__cards">
+            <li class="card is-active" data-step="0">
+              <p class="card__num hand">01</p>
+              <h3>Верхняя крышечка</h3>
+              <p>Миндальная мука, сахарная пудра и&nbsp;взбитый белок. Тесто отстаивается полчаса, пока на&nbsp;поверхности не&nbsp;появится матовая корочка&nbsp;— только тогда крышечка выйдет гладкой.</p>
+            </li>
+            <li class="card" data-step="1">
+              <p class="card__num hand">02</p>
+              <h3>Ганаш на&nbsp;белом шоколаде</h3>
+              <p>Белый шоколад и&nbsp;сливки, а&nbsp;в&nbsp;самой середине&nbsp;— капля малинового конфи. Ганаш сутки стабилизируется в&nbsp;холоде, чтобы не&nbsp;вытекал и&nbsp;оставался кремовым.</p>
+            </li>
+            <li class="card" data-step="2">
+              <p class="card__num hand">03</p>
+              <h3>Нижняя половинка и&nbsp;юбочка</h3>
+              <p>Та&nbsp;самая пористая кромка внизу&nbsp;— признак правильной выпечки. Появляется, если печь ровно 14&nbsp;минут при 150&nbsp;°C и&nbsp;ни&nbsp;разу не&nbsp;открыть дверцу.</p>
+            </li>
+          </ul>
+
+          <div class="recipe__dots" aria-hidden="true">
+            <span class="is-active"></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </div><!-- /scene-rail -->
+
+    <!-- 4. Сегодня в витрине -->
+    <section class="showcase" id="menu">
+      <div class="showcase__head">
+        <p class="hand showcase__date reveal" id="today">вторник, 15 сентября</p>
+        <h2 class="title reveal">Сегодня <span class="soft">в&nbsp;витрине</span></h2>
+        <p class="showcase__note reveal">Витрина меняется каждое утро. Что-то заканчивается к&nbsp;полудню, и&nbsp;это нормально: мы&nbsp;не&nbsp;печём впрок.</p>
+      </div>
+
+      <div class="products">
+        <article class="product product--lead reveal">
+          <div class="product__img">
+            <picture><source type="image/webp" srcset="assets/img/macaron-pink-400.webp 400w, assets/img/macaron-pink-640.webp 640w, assets/img/macaron-pink-960.webp 960w, assets/img/macaron-pink-1100.webp 1100w" sizes="(max-width: 560px) 90vw, (max-width: 860px) 88vw, 36vw"><img loading="lazy" src="assets/img/macaron-pink.jpg" alt="Классический розовый макарон"></picture>
+            <span class="sticker">хит витрины</span>
+          </div>
+          <div class="product__body">
+            <h3>Классический розовый макарон</h3>
+            <p>Миндальная скорлупка, ганаш на&nbsp;белом шоколаде и&nbsp;малиновое конфи.</p>
+            <div class="product__foot">
+              <span class="price">220&nbsp;₽</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="product product--b reveal">
+          <div class="product__img">
+            <picture><source type="image/webp" srcset="assets/img/almond-croissant-400.webp 400w, assets/img/almond-croissant-640.webp 640w, assets/img/almond-croissant-800.webp 800w" sizes="(max-width: 560px) 169vw, (max-width: 860px) 81vw, 40vw"><img loading="lazy" src="assets/img/almond-croissant.jpg" alt="Миндальный круассан"></picture>
+          </div>
+          <div class="product__body">
+            <h3>Миндальный круассан</h3>
+            <p>72&nbsp;слоя на&nbsp;нормандском масле, франжипан и&nbsp;лепестки миндаля.</p>
+            <div class="product__foot">
+              <span class="price">340&nbsp;₽</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="product product--c reveal">
+          <div class="product__img">
+            <picture><source type="image/webp" srcset="assets/img/crepe-berries-400.webp 400w, assets/img/crepe-berries-640.webp 640w, assets/img/crepe-berries-800.webp 800w" sizes="(max-width: 560px) 90vw, (max-width: 860px) 43vw, 21vw"><img loading="lazy" src="assets/img/crepe-berries.jpg" alt="Тонкий блин с ягодами"></picture>
+            <span class="sticker sticker--rose">до полудня</span>
+          </div>
+          <div class="product__body">
+            <h3>Блин с&nbsp;ягодами</h3>
+            <p>Тонкий блин на&nbsp;топлёном молоке, сливочный крем и&nbsp;садовые ягоды.</p>
+            <div class="product__foot">
+              <span class="price">390&nbsp;₽</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="product product--wide reveal">
+          <div class="product__img">
+            <picture><source type="image/webp" srcset="assets/img/cardamom-bun-400.webp 400w, assets/img/cardamom-bun-640.webp 640w, assets/img/cardamom-bun-960.webp 960w, assets/img/cardamom-bun-1000.webp 1000w" sizes="(max-width: 560px) 90vw, (max-width: 860px) 43vw, 21vw"><img loading="lazy" src="assets/img/cardamom-bun.jpg" alt="Булочка с кардамоном"></picture>
+          </div>
+          <div class="product__body">
+            <h3>Булочка с&nbsp;кардамоном</h3>
+            <p>Скандинавский узел из&nbsp;сдобного теста, свежемолотый кардамон и&nbsp;тростниковый сахар.</p>
+            <p class="hand product__aside">лучше всего с&nbsp;капучино</p>
+            <div class="product__foot">
+              <span class="price">260&nbsp;₽</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 4.5 Конструктор коробки -->
+    <section class="box" id="box" aria-labelledby="boxTitle">
+      <div class="box__head">
+        <p class="kicker reveal">Конструктор</p>
+        <h2 class="title reveal" id="boxTitle">Соберите <span class="soft">свою коробку</span></h2>
+        <p class="box__lead reveal">Выберите размер и вкусы&nbsp;— мы соберём коробку к&nbsp;вашему приходу. Заказ уходит нам в&nbsp;Telegram одним сообщением.</p>
+      </div>
+
+      <div class="box__layout">
+        <!-- 3D-коробка -->
+        <div class="box__stage reveal" id="boxStage">
+          <canvas id="boxCanvas" aria-hidden="true"></canvas>
+          <p class="box__counter" id="boxCounter" aria-hidden="true">0 из 6</p>
+          <p class="hand box__hint" id="boxHint">нажмите на&nbsp;макарон в&nbsp;коробке, чтобы убрать его</p>
+        </div>
+
+        <!-- управление -->
+        <div class="box__panel reveal">
+          <fieldset class="box__sizes">
+            <legend class="box__label">Размер коробки</legend>
+            <label class="size"><input type="radio" name="boxSize" value="6" checked><span><b>6&nbsp;штук</b><i>1&nbsp;250&nbsp;₽</i></span></label>
+            <label class="size"><input type="radio" name="boxSize" value="12"><span><b>12&nbsp;штук</b><i>2&nbsp;400&nbsp;₽</i></span></label>
+          </fieldset>
+
+          <div class="box__flavors">
+            <p class="box__label" id="flavorsLabel">Вкусы <span>нажмите, чтобы положить в&nbsp;коробку</span></p>
+            <ul class="flavors" id="flavorList" aria-labelledby="flavorsLabel"></ul>
+          </div>
+
+          <div class="box__tools">
+            <button type="button" class="link-underline" id="boxRandom">Удивите меня</button>
+            <button type="button" class="link-underline" id="boxClear">Очистить</button>
+          </div>
+
+          <!-- состав по ячейкам — для клавиатуры и экранного диктора -->
+          <ol class="sr-only" id="slotList" aria-label="Ячейки коробки"></ol>
+
+          <label class="box__note">
+            <span class="box__label">Подпись на&nbsp;открытку <span>необязательно</span></span>
+            <textarea id="boxNote" maxlength="120" rows="2" placeholder="С днём рождения, мама!"></textarea>
+            <span class="box__chars" id="boxNoteCount">0 / 120</span>
+          </label>
+
+          <div class="box__summary">
+            <p class="box__total"><span id="boxStatus">Осталось выбрать 6</span><b id="boxPrice">1&nbsp;250&nbsp;₽</b></p>
+            <div class="box__actions">
+              <button type="button" class="btn btn--primary" id="boxSend" disabled>Отправить в&nbsp;Telegram <i class="arrow">→</i></button>
+              <button type="button" class="link-underline" id="boxCopy" disabled>Скопировать заказ</button>
+            </div>
+          </div>
+          <p class="sr-only" id="boxLive" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Философия -->
+    <section class="philosophy" id="about">
+      <div class="philosophy__grid">
+        <figure class="philosophy__big reveal-img">
+          <picture><source type="image/webp" srcset="assets/img/baker-hands-400.webp 400w, assets/img/baker-hands-640.webp 640w, assets/img/baker-hands-960.webp 960w, assets/img/baker-hands-1280.webp 1280w, assets/img/baker-hands-1600.webp 1600w" sizes="(max-width: 860px) 156vw, 97vw"><img loading="lazy" src="assets/img/baker-hands.jpg" alt="Руки пекаря замешивают тесто"></picture>
+        </figure>
+
+        <figure class="print reveal">
+          <picture><source type="image/webp" srcset="assets/img/bread-flour-400.webp 400w, assets/img/bread-flour-640.webp 640w, assets/img/bread-flour-800.webp 800w" sizes="(max-width: 860px) 53vw, 26vw"><img loading="lazy" src="assets/img/bread-flour.jpg" alt="Хлеб на закваске, присыпанный мукой"></picture>
+          <figcaption class="hand">закваска, 36&nbsp;часов</figcaption>
+        </figure>
+
+        <div class="philosophy__text">
+          <p class="kicker reveal">О нас</p>
+          <h2 class="title reveal">Медленно замешиваем. <span class="soft">Быстро исчезает.</span></h2>
+          <p class="reveal">
+            Наша закваска живёт с&nbsp;2016&nbsp;года. Тесто для круассанов отдыхает трое суток, прежде чем попасть в&nbsp;печь.
+            Мы&nbsp;не&nbsp;торопимся там, где спешка стоит вкуса, и&nbsp;не&nbsp;используем смеси, улучшители и&nbsp;заморозку.
+          </p>
+          <p class="reveal">
+            Муку привозят с&nbsp;небольшой мельницы под Тверью, масло&nbsp;— из&nbsp;Нормандии, ягоды&nbsp;— с&nbsp;фермы, где мы&nbsp;знаем хозяев по&nbsp;именам.
+          </p>        </div>
+      </div>
+
+      <div class="strip">
+        <figure class="reveal-img"><picture><source type="image/webp" srcset="assets/img/bread-loaf-400.webp 400w, assets/img/bread-loaf-640.webp 640w, assets/img/bread-loaf-900.webp 900w" sizes="(max-width: 860px) 54vw, 36vw"><img loading="lazy" src="assets/img/bread-loaf.jpg" alt="Буханка хлеба на закваске"></picture><figcaption>Хлеб дня</figcaption></figure>
+        <figure class="reveal-img"><picture><source type="image/webp" srcset="assets/img/croissant-tray-400.webp 400w, assets/img/croissant-tray-640.webp 640w, assets/img/croissant-tray-900.webp 900w" sizes="(max-width: 860px) 48vw, 20vw"><img loading="lazy" src="assets/img/croissant-tray.jpg" alt="Противень свежих круассанов"></picture><figcaption>Первая партия, 6:40</figcaption></figure>
+        <figure class="reveal-img"><picture><source type="image/webp" srcset="assets/img/bakery-shelves-400.webp 400w, assets/img/bakery-shelves-640.webp 640w, assets/img/bakery-shelves-900.webp 900w" sizes="(max-width: 860px) 72vw, 37vw"><img loading="lazy" src="assets/img/bakery-shelves.jpg" alt="Полки пекарни с выпечкой"></picture><figcaption>Цех</figcaption></figure>
+        <figure class="reveal-img"><picture><source type="image/webp" srcset="assets/img/cafe-hall-400.webp 400w, assets/img/cafe-hall-640.webp 640w, assets/img/cafe-hall-900.webp 900w" sizes="(max-width: 860px) 104vw, 40vw"><img loading="lazy" src="assets/img/cafe-hall.jpg" alt="Уютный интерьер кофейни"></picture><figcaption>Зал на Никитской</figcaption></figure>
+      </div>
+    </section>
+
+    <!-- 6. Адреса -->
+    <section class="places" id="places">
+      <figure class="places__photo reveal-img">
+        <picture><source type="image/webp" srcset="assets/img/window-table-400.webp 400w, assets/img/window-table-640.webp 640w, assets/img/window-table-960.webp 960w, assets/img/window-table-1280.webp 1280w, assets/img/window-table-1400.webp 1400w" sizes="(max-width: 860px) 124vw, 104vw"><img loading="lazy" src="assets/img/window-table.jpg" alt="Столик у окна в Café Doux"></picture>
+      </figure>
+
+      <div class="places__body">
+        <p class="kicker reveal">Адреса</p>
+        <h2 class="title reveal">Две пекарни, <span class="soft">одно утро</span></h2>
+
+        <div class="places__list">
+          <article class="place reveal">
+            <h3>Покровка</h3>
+            <p class="place__addr">ул. Покровка, 17, стр.&nbsp;1<br>м.&nbsp;Чистые пруды</p>
+            <dl class="hours">
+              <div><dt>пн–пт</dt><dd>7:30–21:00</dd></div>
+              <div><dt>сб–вс</dt><dd>8:30–22:00</dd></div>
+            </dl>
+            <p class="place__links">
+              <a class="link-underline" target="_blank" rel="noopener" href="https://yandex.ru/maps/?text=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0%2C%20%D1%83%D0%BB.%20%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%BA%D0%B0%2C%2017">Яндекс Карты</a>
+              <a class="link-underline" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0%2C%20%D1%83%D0%BB.%20%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%BA%D0%B0%2C%2017">Google Maps</a>
+            </p>
+          </article>
+
+          <article class="place reveal">
+            <h3>Большая Никитская</h3>
+            <p class="place__addr">ул. Большая Никитская, 24/1<br>м.&nbsp;Арбатская</p>
+            <dl class="hours">
+              <div><dt>пн–пт</dt><dd>8:00–21:00</dd></div>
+              <div><dt>сб–вс</dt><dd>9:00–21:00</dd></div>
+            </dl>
+            <p class="place__links">
+              <a class="link-underline" target="_blank" rel="noopener" href="https://yandex.ru/maps/?text=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0%2C%20%D1%83%D0%BB.%20%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F%20%D0%9D%D0%B8%D0%BA%D0%B8%D1%82%D1%81%D0%BA%D0%B0%D1%8F%2C%2024">Яндекс Карты</a>
+              <a class="link-underline" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0%2C%20%D1%83%D0%BB.%20%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F%20%D0%9D%D0%B8%D0%BA%D0%B8%D1%82%D1%81%D0%BA%D0%B0%D1%8F%2C%2024">Google Maps</a>
+            </p>
+            <p class="hand place__aside">здесь тише и&nbsp;есть широкий подоконник</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Финальный CTA -->
+    <section class="cta">
+      <div class="cta__bg reveal-img">
+        <picture><source type="image/webp" srcset="assets/img/bakery-counter-400.webp 400w, assets/img/bakery-counter-640.webp 640w, assets/img/bakery-counter-960.webp 960w, assets/img/bakery-counter-1280.webp 1280w, assets/img/bakery-counter-1600.webp 1600w, assets/img/bakery-counter-2000.webp 2000w" sizes="(max-width: 560px) 140vw, (max-width: 860px) 144vw, 109vw"><img loading="lazy" src="assets/img/bakery-counter.jpg" alt=""></picture>
+      </div>
+      <div class="cta__content">
+        <h2 class="cta__title reveal">Загляните за&nbsp;своим <span class="soft">тёплым утром</span></h2>
+        <div class="cta__side reveal">
+          <p>Покровка, 17&nbsp;— пять минут пешком от&nbsp;Чистых прудов.</p>
+          <a class="btn btn--light" target="_blank" rel="noopener"
+             href="https://yandex.ru/maps/?rtext=~%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0%2C%20%D1%83%D0%BB.%20%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%BA%D0%B0%2C%2017&rtt=pd">
+            Построить маршрут <i class="arrow">→</i>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 8. Футер -->
+  <footer class="footer">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <a href="#top" class="logo logo--footer">Café <span class="logo__hand">doux</span></a>
+        <p class="hand">сделано с&nbsp;любовью и&nbsp;маслом</p>
+      </div>
+      <div class="footer__contacts">
+        <h3 class="footer__label">Позвонить или написать</h3>
+        <a class="footer__phone" href="tel:+74951234567">+7 495 123-45-67</a>
+        <a href="mailto:bonjour@cafedoux.ru">bonjour@cafedoux.ru</a>
+      </div>
+      <div class="footer__social">
+        <h3 class="footer__label">Мы пишем тут</h3>
+        <p>
+          <a href="#" target="_blank" rel="noopener">Instagram</a>,
+          <a href="#" target="_blank" rel="noopener">Telegram</a> и&nbsp;<a href="#" target="_blank" rel="noopener">VK</a>
+        </p>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 Café Doux</span>
+      <a href="#top">Наверх ↑</a>
+    </div>
+  </footer>
+
+
+  <!-- three.js 0.169.0 лежит на сайте (vendor/three): не зависим от CDN, который бывает недоступен -->
+  <script type="importmap">
+    { "imports": {
+        "three": "./vendor/three/build/three.module.min.js",
+        "three/addons/": "./vendor/three/examples/jsm/"
+    } }
+  </script>
+  <script src="js/main.js" defer></script>
+  <script type="module" src="js/macaron.js"></script>
+  <script type="module" src="js/box.js"></script>
+</body>
+</html>

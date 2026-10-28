@@ -1,0 +1,52 @@
+# Публикация на GitHub Pages: при каждом push в main собирается чистовая версия
+# (build/release.mjs → dist/) и выкладывается на сайт.
+# Один раз включить в репозитории: Settings → Pages → Build and deployment → Source: GitHub Actions.
+name: Публикация на GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # для сборки нужен только esbuild; остальные инструменты из build/package.json
+      # (Lighthouse, обработка фото и модели) запускаются локально
+      - name: Установить esbuild
+        run: npm install --no-save --no-package-lock esbuild@0.24.0
+
+      - name: Собрать сайт
+        run: node build/release.mjs
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

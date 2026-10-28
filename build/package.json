@@ -1,0 +1,21 @@
+{
+  "name": "cafe-doux-build",
+  "private": true,
+  "description": "Инструменты сборки сайта Café Doux: чистовая сборка, фото, 3D-модель, проверки Lighthouse",
+  "type": "module",
+  "scripts": {
+    "build": "node release.mjs",
+    "images": "node images.mjs",
+    "lighthouse": "lighthouse http://127.0.0.1:5174/ --view"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@gltf-transform/functions": "^4.5.0",
+    "esbuild": "^0.24.0",
+    "jpeg-js": "^0.4.4",
+    "lighthouse": "^12.8.2",
+    "meshoptimizer": "^1.2.0",
+    "sharp": "^0.35.0"
+  }
+}

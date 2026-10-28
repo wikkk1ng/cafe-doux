@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Исходник курсора: объёмная перламутровая стрелка. PNG 1x/2x делаются из него (см. build/cursor.md) -->
+  <defs>
+    <path id="a" d="M8 7 L18.5 44 L26 35.5 L38.5 49.5 L45.5 43 L33.5 29.5 L45.5 25 Z"/>
+    <!-- боковина: от светлого жемчуга к розово-сиреневому -->
+    <linearGradient id="side" x1="0" y1="10" x2="0" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F6EEF8"/>
+      <stop offset=".55" stop-color="#E6C9E6"/>
+      <stop offset="1" stop-color="#C7A3D6"/>
+    </linearGradient>
+    <!-- трубка по краю: синий → сиреневый → розовый -->
+    <linearGradient id="tube" x1="8" y1="7" x2="46" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7FA6FF"/>
+      <stop offset=".45" stop-color="#A996FF"/>
+      <stop offset=".8" stop-color="#E7A2E6"/>
+      <stop offset="1" stop-color="#F6B9DC"/>
+    </linearGradient>
+    <!-- верхняя грань -->
+    <linearGradient id="face" x1="10" y1="10" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#BFE1FF"/>
+      <stop offset=".5" stop-color="#DCD3FF"/>
+      <stop offset="1" stop-color="#FFD3EC"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="8" x2="0" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.6"/>
+    </filter>
+  </defs>
+
+  <!-- свечение для ссылок и кнопок (в обычном варианте выключено) -->
+  <g id="halo" opacity="0" filter="url(#glow)">
+    <use href="#a" fill="#F08BD0" stroke="#F08BD0" stroke-width="9" stroke-linejoin="round"/>
+  </g>
+
+  <g stroke-linejoin="round">
+    <!-- тонкая тёмная кромка вокруг всего силуэта: стрелку видно и на светлом фоне, и на тёмном -->
+    <g fill="#2B1520" stroke="#2B1520" stroke-width="9" stroke-opacity=".6" fill-opacity=".6">
+      <use href="#a"/><use href="#a" x="-1" y="2.5"/><use href="#a" x="-2" y="5"/>
+    </g>
+    <!-- объём: несколько копий со сдвигом вниз-влево -->
+    <g fill="url(#side)" stroke="url(#side)" stroke-width="7">
+      <use href="#a" x="-2" y="5"/><use href="#a" x="-1.5" y="3.75"/><use href="#a" x="-1" y="2.5"/><use href="#a" x="-.5" y="1.25"/>
+    </g>
+    <!-- верх -->
+    <use href="#a" fill="url(#face)"/>
+    <use href="#a" fill="url(#sheen)"/>
+    <use href="#a" fill="none" stroke="url(#tube)" stroke-width="6"/>
+    <!-- блик на трубке -->
+    <use href="#a" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="1.3" x="-.5" y="-.7"/>
+    <!-- внутренняя кромка трубки чуть темнее -->
+    <use href="#a" fill="none" stroke="#5E6CE8" stroke-opacity=".35" stroke-width="1" x=".4" y=".6"/>
+  </g>
+</svg>

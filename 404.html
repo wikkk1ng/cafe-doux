@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- GitHub Pages отдаёт эту страницу по любому несуществующему адресу, например /repo/a/b/c.
+       Поэтому первым делом ставим <base> на корень сайта — иначе стили и скрипты искались бы в /a/b/.
+       На *.github.io корень проекта — первая папка пути; на своём домене — «/».
+       (Если сайт будет пользовательским — username.github.io без папки, — здесь нужно просто «/».) -->
+  <script>
+    (function () {
+      var base = /\.github\.io$/.test(location.hostname) ? '/' + location.pathname.split('/')[1] + '/' : '/';
+      var b = document.createElement('base');
+      b.href = base;
+      document.head.appendChild(b);
+      // Стили и шрифты пишем отсюда, уже после <base>: если оставить их в разметке, браузер
+      // заранее запросит их по «неправильному» адресу (/a/b/css/…) и скачает дважды.
+      // document.write — чтобы стили, как и обычный <link>, успели до первой отрисовки.
+      var font = function (name) {
+        return '<link rel="preload" href="assets/fonts/' + name + '.woff2" as="font" type="font/woff2" crossorigin>';
+      };
+      document.write(font('yeseva-one') + font('literata') +
+        '<link rel="stylesheet" href="css/style.css">');
+    })();
+  </script>
+  <title>Страница не найдена — Café Doux</title>
+  <meta name="description" content="Такой страницы на сайте Café Doux нет. Возвращайтесь к витрине.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#EFE3CF">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='22' rx='26' ry='12' fill='%23E99AA8'/%3E%3Crect x='8' y='26' width='48' height='9' rx='4' fill='%23F4E2D0'/%3E%3Cellipse cx='32' cy='41' rx='26' ry='12' fill='%23E99AA8'/%3E%3C/svg%3E">
+  <!-- тема — как на главной: вечер с 19:00 до 6:00 или ручной выбор за последние 12 часов -->
+  <script>
+    (function () {
+      var d = document.documentElement, theme = null;
+      var forced = /[?&]theme=(day|evening)/.exec(location.search);
+      if (forced) theme = forced[1];
+      if (!theme) {
+        try {
+          var saved = JSON.parse(localStorage.getItem('cafedoux-theme') || 'null');
+          if (saved && Date.now() - saved.at < 12 * 3600e3) theme = saved.theme;
+        } catch (e) {}
+      }
+      if (!theme) { var h = new Date().getHours(); theme = h >= 19 || h < 6 ? 'evening' : 'day'; }
+      d.dataset.theme = theme;
+      d.classList.add('js');
+      if (theme === 'evening') document.querySelector('meta[name="theme-color"]').content = '#1D1510';
+    })();
+  </script>
+  <style>
+    /* ---------- страница 404: «макарон укатился» ---------- */
+    html, body { height: 100%; }
+    body.nf-page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100svh;
+      overflow: hidden;
+      /* горизонтальные движения пальцем толкают макарон, вертикальные — как обычно */
+      touch-action: pan-y;
+    }
+    .nf-top { padding: 28px var(--pad) 0; position: relative; z-index: 3; }
+
+    .nf {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px var(--pad) clamp(40px, 7vh, 80px);
+    }
+    .nf__digits {
+      position: relative;
+      margin: 0 0 clamp(28px, 5vh, 56px);
+      font-family: var(--display);
+      font-size: clamp(96px, 27vw, 380px);
+      line-height: .8;
+      letter-spacing: .02em;
+      white-space: nowrap;
+      color: var(--espresso);
+      user-select: none;
+    }
+    /* ноль — место макарона. Пока 3D не готов (или его нет), это просто розовая цифра */
+    /* чуть раздвинут: макарон круглее и шире цифры */
+    .nf__zero { margin: 0 .07em; color: var(--framboise); transition: color .4s var(--ease); }
+    .nf3d .nf__zero { color: transparent; }
+    /* нулевая метка на базовой линии цифр — по ней скрипт кладёт «пол» */
+    .nf__base { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
+
+    .nf__title {
+      margin: 0 0 18px;
+      font-family: var(--display);
+      font-size: clamp(34px, 4.4vw, 64px);
+      line-height: 1.02;
+      letter-spacing: -.01em;
+    }
+    .nf__lead { max-width: 30em; margin: 0 0 32px; color: var(--cocoa); }
+    .nf__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px; }
+
+    /* полка, по которой катается макарон: пунктир на уровне базовой линии цифр */
+    .nf__floor {
+      position: absolute;
+      left: 0; right: 0;
+      top: var(--floor, -10px);
+      z-index: 1;
+      height: 0;
+      border-top: 1.5px dashed var(--line);
+      opacity: 0;
+      transition: opacity .8s var(--ease);
+    }
+    .nf3d .nf__floor { opacity: 1; }
+
+    .nf-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .5s var(--ease);
+    }
+    .nf3d .nf-canvas { opacity: 1; }
+
+    /* подписи от руки рядом с макароном */
+    .nf__note {
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 3;
+      margin: 0;
+      font-size: clamp(26px, 2.4vw, 34px);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .5s var(--ease);
+    }
+    .nf__note.is-on { opacity: 1; }
+    .nf__note svg { display: block; width: 46px; height: 30px; margin: 2px 0 0 18px; }
+
+    @media (max-width: 560px) {
+      .nf-top { padding-top: 20px; }
+      .nf { justify-content: flex-start; padding-top: 12vh; }
+      /* справа остаётся место, куда укатиться макарону */
+      .nf__digits { font-size: 25vw; }
+    }
+  </style>
+</head>
+<body class="nf-page">
+  <header class="nf-top">
+    <a href="./" class="logo" aria-label="Café Doux — на главную">Café <span class="logo__hand">doux</span></a>
+  </header>
+
+  <main class="nf" id="nf">
+    <p class="nf__digits" id="nfDigits" aria-hidden="true">4<span class="nf__zero" id="nfZero">0</span>4<i class="nf__base" id="nfBase"></i></p>
+    <span class="nf__floor" id="nfFloor" aria-hidden="true"></span>
+
+    <h1 class="nf__title">Этот макарон <span class="soft">укатился</span></h1>
+    <p class="nf__lead">Такой страницы у&nbsp;нас нет&nbsp;— возможно, её съели ещё утром. Зато на&nbsp;главной всё свежее.</p>
+    <div class="nf__actions">
+      <a href="./" class="btn btn--primary">На главную <i class="arrow">→</i></a>
+      <a href="./#box" class="link-underline">Собрать коробку</a>
+    </div>
+  </main>
+
+  <canvas class="nf-canvas" id="nfCanvas" aria-hidden="true"></canvas>
+  <p class="hand nf__note" id="nfPush" aria-hidden="true">
+    толкните меня
+    <svg viewBox="0 0 90 60"><path d="M6 8 C 24 6, 50 14, 64 42 M52 38 L65 45 L70 31" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </p>
+  <p class="hand nf__note" id="nfFound" aria-hidden="true">нашёлся!</p>
+
+  <script type="importmap">
+    { "imports": {
+        "three": "./vendor/three/build/three.module.min.js",
+        "three/addons/": "./vendor/three/examples/jsm/"
+    } }
+  </script>
+  <!-- 3D подтягиваем после загрузки, когда браузер свободен: текст и кнопка появляются сразу -->
+  <script type="module">
+    const go = () => import('./js/notfound.js').catch(err => console.warn('404: 3D skipped', err));
+    const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 200));
+    if (document.readyState === 'complete') idle();
+    else addEventListener('load', idle, { once: true });
+  </script>
+</body>
+</html>
